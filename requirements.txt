@@ -1,0 +1,9 @@
+django
+psycopg2-binary
+pillow
+pytils
+load-dotenv
+pytz
+django-crontab
+redis
+iPython
