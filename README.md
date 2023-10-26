@@ -8,4 +8,4 @@
   6. Выполнить миграции (python manage.py migrate).
   7. Заполнить БД (python manage.py fill).
   8. Создать администратора (python manage.py csu).
-  9. Запустить redis (redis-cli)
+  9. Запустить redis (redis-cli).
