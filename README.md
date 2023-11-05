@@ -6,6 +6,6 @@
   4. Для работы с переменными окружениями необходимо создать файл .env и заполнить его согласно файлу .env.sample.
   5. Создать БД в psql (create database <db name>;).
   6. Выполнить миграции (python manage.py migrate).
-  7. Заполнить БД (python manage.py fill).
-  8. Создать администратора (python manage.py csu).
+  7. Создать администратора (python manage.py csu).
+  8. Создать группы пользователей с доступами (python manage.py add_group)
   9. Запустить redis (redis-cli).
