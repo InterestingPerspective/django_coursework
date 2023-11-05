@@ -7,16 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        my_group = Group.objects.create(name='manager_mailing')
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='add_customer')
-        my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='view_customer')
-        my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='delete_customer')
-        my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='change_customer')
-        my_group.permissions.add(perm)
-
+        my_group = Group.objects.create(name='user')
         perm = Permission.objects.get(content_type__app_label='mailing', content_type__model='mailing', codename='add_mailing')
         my_group.permissions.add(perm)
         perm = Permission.objects.get(content_type__app_label='mailing', content_type__model='mailing', codename='view_mailing')
@@ -29,9 +20,9 @@ class Command(BaseCommand):
         my_group = Group.objects.create(name='manager')
         perm = Permission.objects.get(content_type__app_label='mailing', content_type__model='mailing', codename='view_mailing')
         my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='view_customer')
+        perm = Permission.objects.get(content_type__app_label='users', content_type__model='user', codename='view_user')
         my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='mailing', content_type__model='mailing', codename='change_mailing')
+        perm = Permission.objects.get(content_type__app_label='mailing', content_type__model='mailing', codename='set_active')
         my_group.permissions.add(perm)
-        perm = Permission.objects.get(content_type__app_label='customer', content_type__model='customer', codename='change_customer')
+        perm = Permission.objects.get(content_type__app_label='users', content_type__model='user', codename='set_active')
         my_group.permissions.add(perm)

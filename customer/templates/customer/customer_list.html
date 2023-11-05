@@ -20,15 +20,9 @@
             </p>
             <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                    {% if perms.customer.view_customer %}
                         <button type="button" class="btn btn-sm btn-outline-secondary"><a href="{% url 'customer:view_customer' object.pk %}">View</a></button>
-                    {% endif %}
-                    {% if perms.customer.change_customer %}
                         <button type="button" class="btn btn-sm btn-outline-secondary"><a href="{% url 'customer:edit' object.pk %}">Edit</a></button>
-                    {% endif %}
-                    {% if perms.customer.delete_customer %}
                         <button type="button" class="btn btn-sm btn-outline-danger"><a href="{% url 'customer:delete' object.pk %}">Delete</a></button>
-                    {% endif %}
                 </div>
             </div>
         </div>

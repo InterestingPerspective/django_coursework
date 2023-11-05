@@ -7,4 +7,4 @@ class CustomerForms(forms.ModelForm):
 
     class Meta:
         model = Customer
-        fields = '__all__'
+        exclude = ('user', 'is_active')

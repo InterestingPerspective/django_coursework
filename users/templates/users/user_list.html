@@ -1,0 +1,24 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+{% for object in object_list %}
+<div class="col-md-4">
+    <div class="card mb-4 box-shadow">
+        <div class="card-body">
+            <p class="card-text">
+                {% if object.is_active %}
+                {{ object.email }} - Активный
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <a class="btn btn-warning" href="{% url 'users:toggle_activity' object.pk %}">Заблокировать</a>
+            </div>
+            {% else %}
+            <span class="text-muted">{{ object.email }} - Заблокирован</span>
+            <div class="d-flex justify-content-between align-items-center">
+                <a class="btn btn-success" href="{% url 'users:toggle_activity' object.pk %}">Разблокировать</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

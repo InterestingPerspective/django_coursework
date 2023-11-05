@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.db import models
-from users.models import User, NULLABLE
+from users.models import NULLABLE
 
 
 class Customer(models.Model):
@@ -9,7 +10,7 @@ class Customer(models.Model):
     second_name = models.CharField(max_length=100, verbose_name='отчество')
     email = models.EmailField()
     comment = models.TextField(**NULLABLE)
-    user = models.ForeignKey(User, verbose_name='пользователь', on_delete=models.CASCADE, **NULLABLE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='пользователь', on_delete=models.CASCADE, **NULLABLE)
 
     is_active = models.BooleanField(default=True, **NULLABLE)
 

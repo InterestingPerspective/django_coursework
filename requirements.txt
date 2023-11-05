@@ -4,6 +4,7 @@ pillow
 pytils
 load-dotenv
 pytz
-django-crontab
 redis
 iPython
+APScheduler
+django-apscheduler

@@ -1,8 +1,10 @@
 {% extends 'mailing/base.html' %}
 {% block content %}
+{% if not user.is_staff %}
 <div class="col-12 mb-5">
     <a class="btn btn-outline-primary" href="{% url 'mailing:create' %}">Добавить рассылку</a>
 </div>
+{% endif %}
 {% for object in object_list %}
 <div class="col-md-4">
     <div class="card mb-4 box-shadow">
@@ -10,7 +12,7 @@
             <p class="card-text">{{ object.mailing_time }}</p>
             <p class="card-text">{{ object.get_periodicity_display }}</p>
             <p class="card-text">
-                {% if object.status == 3 %}
+                {% if object.status == 'completed' %}
                     <span class="text-muted">{{ object.get_status_display }}</span>
                 {% else %}
                     {{ object.get_status_display }}
@@ -26,6 +28,13 @@
                     {% endif %}
                     {% if perms.mailing.delete_mailing %}
                         <button type="button" class="btn btn-sm btn-outline-danger"><a href="{% url 'mailing:delete' object.pk %}">Delete</a></button>
+                    {% endif %}
+                    {% if perms.mailing.set_active %}
+                        {% if object.is_active %}
+                            <a class="btn btn-warning" href="{% url 'mailing:toggle_activity' object.pk %}">Отключить</a>
+                        {% else %}
+                            <a class="btn btn-success" href="{% url 'mailing:toggle_activity' object.pk %}">Включить</a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

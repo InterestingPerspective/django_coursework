@@ -1,19 +1,15 @@
-from datetime import datetime
-
-import smtplib
-import pytz
 from django.conf import settings
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.cache import cache
 
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.core.mail import send_mail
 
 from blog.models import Article
 from customer.models import Customer
-from mailing.forms import MailingForms
+from mailing.forms import CreateMailingForm, UpdateMailingForm
 from mailing.models import Mailing, Log
 
 
@@ -22,7 +18,10 @@ class MailingListView(LoginRequiredMixin, ListView):
     template_name = 'mailing/mailing_list.html'
 
     def get_queryset(self):
-        return super().get_queryset().filter(user=self.request.user)
+        if self.request.user.is_staff:
+            return Mailing.objects.all()
+        queryset = Mailing.objects.filter(user=self.request.user, is_active=True)
+        return queryset
 
 
 class MailingDetailView(LoginRequiredMixin, DetailView):
@@ -35,10 +34,10 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
             key = f'log_list_{self.object.pk}'
             log_list = cache.get(key)
             if log_list is None:
-                log_list = self.object.log_set.all()
+                log_list = Log.objects.filter(mailing__pk=self.object.pk)
                 cache.set(key, log_list)
         else:
-            log_list = self.object.log_set.all()
+            log_list = Log.objects.filter(mailing__pk=self.object.pk)
         context_data['logs'] = log_list
 
         return context_data
@@ -60,7 +59,7 @@ def main(request):
     customers = len(Customer.objects.all().distinct('email'))
     article = Article.objects.filter(is_published=True).order_by('?')
     mailing = len(Mailing.objects.all())
-    mailing_active = len(Mailing.objects.filter(status=2))
+    mailing_active = len(Mailing.objects.filter(status='started'))
     context = {
         'title': "Главная",
         'article': article[:3],
@@ -73,47 +72,88 @@ def main(request):
 
 class MailingCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Mailing
-    form_class = MailingForms
     permission_required = 'mailing.add_mailing'
+    form_class = CreateMailingForm
     success_url = reverse_lazy('mailing:list')
 
-    def form_valid(self, form):
-        tz = pytz.timezone('Europe/Moscow')
-        customers = [customer.email for customer in Customer.objects.filter(user=self.request.user)]
-        new_mailing = form.save()
+    def get(self, request, **kwargs):
+        form = self.form_class(self.request.user, request.POST)
+        context = {
+            'form': form,
+        }
+        customers = Customer.objects.filter(user=self.request.user)
+        context['customers'] = customers
+        return render(request, 'mailing/mailing_form.html', context)
 
-        if new_mailing.mailing_time <= datetime.now(tz):
-            mail_subject = new_mailing.massage.body if new_mailing.massage is not None else 'Рассылка'
-            message = new_mailing.massage.theme if new_mailing.massage is not None else 'Вам назначена рассылка'
-            try:
-                send_mail(mail_subject, message, settings.EMAIL_HOST_USER, customers)
-                log = Log.objects.create(date_attempt=datetime.now(tz), status='Успешно', answer='200', mailing=new_mailing)
-                log.save()
-            except smtplib.SMTPDataError as err:
-                log = Log.objects.create(date_attempt=datetime.now(tz), status='Ошибка', answer=err, mailing=new_mailing)
-                log.save()
-            except smtplib.SMTPException as err:
-                log = Log.objects.create(date_attempt=datetime.now(tz), status='Ошибка', answer=err, mailing=new_mailing)
-                log.save()
-            except Exception as err:
-                log = Log.objects.create(date_attempt=datetime.now(tz), status='Ошибка', answer=err, mailing=new_mailing)
-                log.save()
-            new_mailing.status = 3
-            if new_mailing.user is None:
-                new_mailing.user = self.request.user
-            new_mailing.save()
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.user, request.POST)
 
-        return super().form_valid(form)
+        if form.is_valid():
+            customers = form.cleaned_data.get('customers')
+            if not customers:
+                form.add_error('customers', 'Выберите хотя бы одного клиента.')
+            mailing = form.save(commit=False)
+            mailing.user = self.request.user
+            mailing.is_active = True
+            mailing.save()
+            form.save_m2m()
+            return redirect(self.success_url)
+
+        else:
+            return render(request, 'mailing/no_customer.html')
 
 
 class MailingUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Mailing
-    form_class = MailingForms
+    form_class = UpdateMailingForm
     permission_required = 'mailing.change_mailing'
     success_url = reverse_lazy('mailing:list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        customers = Customer.objects.filter(user=self.request.user)
+        context['customers'] = customers
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
 
 class MailingDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Mailing
     permission_required = 'mailing.delete_mailing'
     success_url = reverse_lazy('mailing:list')
+
+
+class LogListView(LoginRequiredMixin, ListView):
+    model = Log
+    template_name = 'mailing/log_list.html'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+
+class DetailLogView(LoginRequiredMixin, DetailView):
+    model = Log
+    template_name = 'mailing/log_detail.html'
+
+
+class DeleteLogView(LoginRequiredMixin, DeleteView):
+    model = Log
+    template_name = 'mailing/log_confirm_delete.html'
+    success_url = reverse_lazy('mailing:log_list')
+
+
+@permission_required('mailing.set_active')
+def toggle_activity(request, pk):
+    mailing_item = get_object_or_404(Mailing, pk=pk)
+    if mailing_item.is_active:
+        mailing_item.is_active = False
+    else:
+        mailing_item.is_active = True
+
+    mailing_item.save()
+
+    return redirect(reverse('mailing:list'))

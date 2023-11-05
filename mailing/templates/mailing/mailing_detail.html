@@ -7,7 +7,7 @@
             <p class="card-text">{{ object.mailing_time }}</p>
             <p class="card-text">{{ object.get_periodicity_display }}</p>
             <p class="card-text">
-                {% if object.status == 3 %}
+                {% if object.status == 'completed' %}
                     <span class="text-muted">{{ object.get_status_display }}</span>
                 {% else %}
                     {{ object.get_status_display }}

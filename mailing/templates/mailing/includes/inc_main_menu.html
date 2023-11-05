@@ -3,10 +3,16 @@
     <ul class="list-unstyled">
         <li><a href="{% url 'mailing:main' %}" class="text-white">Главная</a></li>
         <li><a href="{% url 'mailing:contact' %}" class="text-white">Контакты</a></li>
-        <li><a href="{% url 'mailing:list' %}" class="text-white">Рассылки</a></li>
-        <li><a href="{% url 'customer:list' %}" class="text-white">Клиенты</a></li>
         <li><a href="{% url 'blog:list' %}" class="text-white">Статьи</a></li>
         {% if user.is_authenticated %}
+            <li><a href="{% url 'mailing:list' %}" class="text-white">Рассылки</a></li>
+            {% if not user.is_staff %}
+                <li><a href="{% url 'customer:list' %}" class="text-white">Клиенты</a></li>
+                <li><a href="{% url 'mailing:log_list' %}" class="text-white">Отчеты</a></li>
+            {% endif %}
+            {% if perms.users.view_user %}
+                <li><a href="{% url 'users:list' %}" class="text-white">Пользователи</a></li>
+            {% endif %}
             <li><a href="{% url 'users:logout' %}" class="text-white">Выйти</a></li>
             <li><a href="{% url 'users:profile' %}" class="text-white">Профиль</a></li>
         {% else %}
